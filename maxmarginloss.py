@@ -3,9 +3,9 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 def batch_cos_sim(batch):
-    print batch.size()
+    # print "loss cos sim batch.size", batch.size()
     batch_size = batch.size(0) / 22
-    print batch_size
+    # print "batch_size divided", batch_size
     if batch_size < 1:
         batch_size = 1
     samples = torch.chunk(batch, batch_size)
@@ -17,8 +17,9 @@ def batch_cos_sim(batch):
     pos_idxs = Variable(torch.LongTensor([0] * batch_size))
     return cos_sims, pos_idxs
 
-def cos_sim(input):
-    s_query_candidates = F.cosine_similarity(input[0].unsqueeze(0).expand_as(input[1:]), input[1:])
+def cos_sim(inp):
+    print "cos input", inp.size()
+    s_query_candidates = F.cosine_similarity(inp[0].unsqueeze(0).expand_as(inp[1:]), inp[1:])
     return s_query_candidates
 
 class OneSampleMaxMarginLoss(torch.nn.Module):
@@ -26,10 +27,10 @@ class OneSampleMaxMarginLoss(torch.nn.Module):
         # C is a constant singleton Variable - the margin (eg. Variable(torch.Tensor([0.1])) )
         super(OneSampleMaxMarginLoss,self).__init__()
 
-    def forward(self, input, target):
+    def forward(self, inp, target):
         # can only use Functional stuff
-        s_query_candidates = F.cosine_similarity(input[0].unsqueeze(0).expand_as(input[2:]), input[2:])
-        s_query_pos_sample = F.cosine_similarity(input[0], input[1], dim=0)
+        s_query_candidates = F.cosine_similarity(inp[0].unsqueeze(0).expand_as(inp[2:]), inp[2:])
+        s_query_pos_sample = F.cosine_similarity(inp[0], inp[1], dim=0)
             # .expand_as(s_query_candidates)
         C = Variable(torch.DoubleTensor([0.001]))
         s = s_query_candidates - s_query_pos_sample + C

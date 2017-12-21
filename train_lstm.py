@@ -10,7 +10,7 @@ import itertools
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-is_cuda = True
+is_cuda = False
 is_bidirectional = False
 EMBEDDING_DIM = 200
 HIDDEN_DIM = 240
@@ -29,7 +29,7 @@ if is_cuda:
 else:
     eps = Variable(torch.DoubleTensor([.001]))
 
-with open("data/part1/train_dataloader", "rb") as f:
+with open("data/part1/train_dataloader_1p", "rb") as f:
     dataloader = pickle.load(f)
 
 start_time = time.time()
@@ -49,17 +49,18 @@ for epoch in xrange(num_epochs):
             body_mask = torch.cat(body_mask, 0).double()
 
         title_inputs = title_batch.permute(2, 0, 1)
+        # print "title input", title_inputs.size()
         body_inputs = body_batch.permute(2, 0, 1)
         title_mask = title_mask.permute(1, 0)
+        # print "title mask", title_mask.size()
         body_mask = body_mask.permute(1, 0)
+        # titles = (100 seq, 22 * batch_size, 200 hid_dim)
+        # mask = (100 seq, 200 hid_dim)
 
         title_inputs = Variable(title_inputs)
         body_inputs = Variable(body_inputs)
         title_mask = Variable(title_mask)
         body_mask = Variable(body_mask)
-
-        # print "title input", title_inputs.size()
-        # print "body input", body_inputs.size()
 
         optimizer.zero_grad()
 
@@ -69,20 +70,27 @@ for epoch in xrange(num_epochs):
         # titles_hidden = torch.cat(title_outs, dim=1)
         # bodies_hidden = torch.cat(body_outs, dim=1)
 
-        # titles_hidden = model(title_inputs)
-        # bodies_hidden = model(body_inputs)
+        titles_hidden = model(title_inputs)
+        bodies_hidden = model(body_inputs)
+        # titles hidden = (100 seq, 22 * batch_size, 240 hid_dim)
 
         # print "title hidden", titles_hidden.size()
-        # print "body hidden", bodies_hidden.size()
-
+        # apply mask
         titles_encoded = titles_hidden * title_mask.unsqueeze(2).expand_as(titles_hidden)
         bodies_encoded = bodies_hidden * body_mask.unsqueeze(2).expand_as(bodies_hidden)
+        # print "titles mult expanded mask", titles_encoded.size()
+        # titles encoded = (100 seq, 22 * batch_size, 240 hid_dim)
 
+        # average over the word and divide by the actual length
         titles_encoded = torch.sum(titles_encoded, dim=0)
         bodies_encoded = torch.sum(bodies_encoded, dim=0)
+        # print "titles summed", titles_encoded.size()
+        # titles encoded = (22 * batch_size, 240 hid_dim)
 
         titles_encoded = titles_encoded / (torch.sum(title_mask, keepdim=True, dim=0).permute(1, 0).expand_as(titles_encoded) + eps)
         bodies_encoded = bodies_encoded / (torch.sum(body_mask, keepdim=True, dim=0).permute(1, 0).expand_as(bodies_encoded) + eps)
+        # print "titles div over summed mask", titles_encoded.size()
+        # titles encoded = (22 * batch_size, 240 hid_dim)
 
         if is_cuda:
             qs_encoded = (titles_encoded + bodies_encoded) / Variable(torch.cuda.DoubleTensor([2]))
