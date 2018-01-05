@@ -29,10 +29,29 @@ class LSTM(nn.Module):
                 h = Variable(torch.zeros(1, batch_size, self.hidden_dim)).double()
             return (h, h)
 
-    def forward(self, x):
+    def forward(self, x, mask):
+        # mask = (100 seq, 22 * batch_size)
+        # x = (100 seq, 22 * batch_size, 200 hid_dim)
         self.hidden = self.init_hidden(x.size(1))
         output = self.dropout(x)
-        output, hidden = self.lstm(output, self.hidden)
-        # output = torch.mean(output, dim=0)
+        output, self.hidden = self.lstm(output, self.hidden)
+
+        # apply mask
+        output = output * mask.unsqueeze(2).expand_as(output)
+        # output = (100 seq, 22 * batch_size, 240 hid_dim)
+
+        # mean pooling
+        # output = torch.mean(output, dim=0) (without mask)
+        # average over the word and divide by the actual length
+        output = torch.sum(output, dim=0)
+        # output = (22 * batch_size, 240 hid_dim)
+
+        if self.is_cuda:
+            eps = Variable(torch.cuda.DoubleTensor([.001]))
+        else:
+            eps = Variable(torch.DoubleTensor([.001]))
+        output = output / (torch.sum(mask, keepdim=True, dim=0).permute(1, 0).expand_as(output) + eps)
+        # output = (22 * batch_size, 240 hid_dim)
+
         output = self.dropout(output)
         return output

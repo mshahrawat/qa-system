@@ -44,17 +44,8 @@ def eval(dataloader, model, is_cuda, auc=False):
         title_mask = Variable(title_mask)
         body_mask = Variable(body_mask)
 
-        titles_hidden = model(title_inputs)
-        bodies_hidden = model(body_inputs)
-
-        titles_encoded = titles_hidden * title_mask.unsqueeze(2).expand_as(titles_hidden)
-        bodies_encoded = bodies_hidden * body_mask.unsqueeze(2).expand_as(bodies_hidden)
-
-        titles_encoded = torch.sum(titles_encoded, dim=0)
-        bodies_encoded = torch.sum(bodies_encoded, dim=0)
-
-        titles_encoded = titles_encoded / (torch.sum(title_mask, keepdim=True, dim=0).permute(1, 0).expand_as(titles_encoded) + eps)
-        bodies_encoded = bodies_encoded / (torch.sum(body_mask, keepdim=True, dim=0).permute(1, 0).expand_as(bodies_encoded) + eps)
+        titles_encoded = model(title_inputs, title_mask)
+        bodies_encoded = model(body_inputs, body_mask)
 
         if is_cuda:
             qs_encoded = (titles_encoded + bodies_encoded) / Variable(torch.cuda.DoubleTensor([2]))
@@ -86,7 +77,7 @@ def eval(dataloader, model, is_cuda, auc=False):
 if __name__ == '__main__':
     model = LSTM(200, 240, 5)
     model.double()
-    model.load_state_dict(torch.load('./models/lstm_1_1p_', 
+    model.load_state_dict(torch.load('./models/lstm_1', 
         map_location=lambda storage, loc: storage))
     is_cuda = False
     is_auc = False

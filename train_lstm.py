@@ -49,10 +49,8 @@ for epoch in xrange(num_epochs):
             body_mask = torch.cat(body_mask, 0).double()
 
         title_inputs = title_batch.permute(2, 0, 1)
-        # print "title input", title_inputs.size()
         body_inputs = body_batch.permute(2, 0, 1)
         title_mask = title_mask.permute(1, 0)
-        # print "title mask", title_mask.size()
         body_mask = body_mask.permute(1, 0)
         # titles = (100 seq, 22 * batch_size, 200 hid_dim)
         # mask = (100 seq, 200 hid_dim)
@@ -64,43 +62,24 @@ for epoch in xrange(num_epochs):
 
         optimizer.zero_grad()
 
-        # attempted question by question
-        # title_outs = [model(row) for row in title_inputs.split(1, dim=1)]
-        # body_outs = [model(row) for row in body_inputs.split(1, dim=1)]
-        # titles_hidden = torch.cat(title_outs, dim=1)
-        # bodies_hidden = torch.cat(body_outs, dim=1)
-
-        titles_hidden = model(title_inputs)
-        bodies_hidden = model(body_inputs)
-        # titles hidden = (100 seq, 22 * batch_size, 240 hid_dim)
-
-        # print "title hidden", titles_hidden.size()
-        # apply mask
-        titles_encoded = titles_hidden * title_mask.unsqueeze(2).expand_as(titles_hidden)
-        bodies_encoded = bodies_hidden * body_mask.unsqueeze(2).expand_as(bodies_hidden)
-        # print "titles mult expanded mask", titles_encoded.size()
-        # titles encoded = (100 seq, 22 * batch_size, 240 hid_dim)
-
-        # average over the word and divide by the actual length
-        titles_encoded = torch.sum(titles_encoded, dim=0)
-        bodies_encoded = torch.sum(bodies_encoded, dim=0)
-        # print "titles summed", titles_encoded.size()
-        # titles encoded = (22 * batch_size, 240 hid_dim)
-
-        titles_encoded = titles_encoded / (torch.sum(title_mask, keepdim=True, dim=0).permute(1, 0).expand_as(titles_encoded) + eps)
-        bodies_encoded = bodies_encoded / (torch.sum(body_mask, keepdim=True, dim=0).permute(1, 0).expand_as(bodies_encoded) + eps)
-        # print "titles div over summed mask", titles_encoded.size()
-        # titles encoded = (22 * batch_size, 240 hid_dim)
+        titles_encoded = model(title_inputs, title_mask)
+        bodies_encoded = model(body_inputs, body_mask)
 
         if is_cuda:
             qs_encoded = (titles_encoded + bodies_encoded) / Variable(torch.cuda.DoubleTensor([2]))
         else :
             qs_encoded = (titles_encoded + bodies_encoded) / Variable(torch.DoubleTensor([2]))
-
-        # print "qs_encoded", qs_encoded.size()
         
         cos_sims, y = maxmarginloss.batch_cos_sim(qs_encoded)
+        # print "first cos"
+        # print cos_sims[0]
+        # print "second cos"
+        # print cos_sims[1]
+        # print "last cos"
+        # print cos_sims[15]
         loss = criterion(cos_sims, y)
+        # print "loss"
+        # print loss
         loss.backward()
         optimizer.step()
         total_epoch_loss += loss.data[0]
@@ -111,7 +90,7 @@ for epoch in xrange(num_epochs):
     # print 'cos sims negative:'
     # print cos_sims[1:4]
 
-torch.save(model.state_dict(), './models/lstm_1_1p_')
+torch.save(model.state_dict(), './models/lstm_1')
 end_time = time.time()
 print('Finished Training in', (end_time - start_time) / 60)
 

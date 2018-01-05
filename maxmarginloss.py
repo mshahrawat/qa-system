@@ -11,8 +11,8 @@ def batch_cos_sim(batch):
     for sample in samples:
         cos_sims.append(cos_sim(sample))
 
-    cos_sims = torch.cat(cos_sims, dim=0)
-    # cos_sims = torch.stack(cos_sims, dim=0)
+    # cos_sims = torch.cat(cos_sims, dim=0)
+    cos_sims = torch.stack(cos_sims, dim=0)
     # pos_idxs = Variable(torch.cuda.LongTensor([0] * batch_size))
     pos_idxs = Variable(torch.LongTensor([0] * batch_size))
     return cos_sims, pos_idxs
