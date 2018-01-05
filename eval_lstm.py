@@ -86,7 +86,7 @@ def eval(dataloader, model, is_cuda, auc=False):
 if __name__ == '__main__':
     model = LSTM(200, 240, 5)
     model.double()
-    model.load_state_dict(torch.load('./models/lstm_20ep_drop', 
+    model.load_state_dict(torch.load('./models/lstm_1_1p_', 
         map_location=lambda storage, loc: storage))
     is_cuda = False
     is_auc = False

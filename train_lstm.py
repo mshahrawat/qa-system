@@ -15,7 +15,7 @@ is_bidirectional = False
 EMBEDDING_DIM = 200
 HIDDEN_DIM = 240
 kernel_size = 5
-num_epochs = 20
+num_epochs = 2
 word2vec_vocab_size = 83916
 glove_vocab_size = 122703
 model = LSTM(EMBEDDING_DIM, HIDDEN_DIM, kernel_size, is_bidirectional, is_cuda)
@@ -106,12 +106,12 @@ for epoch in xrange(num_epochs):
         total_epoch_loss += loss.data[0]
 
     print epoch, " total training loss per epoch: ", total_epoch_loss
-    print "cos sim pos:"
-    print cos_sims[0]
-    print 'cos sims negative:'
-    print cos_sims[1:4]
+    # print "cos sim pos:"
+    # print cos_sims[0]
+    # print 'cos sims negative:'
+    # print cos_sims[1:4]
 
-torch.save(model.state_dict(), './models/lstm_20ep_q')
+torch.save(model.state_dict(), './models/lstm_1_1p_')
 end_time = time.time()
 print('Finished Training in', (end_time - start_time) / 60)
 
