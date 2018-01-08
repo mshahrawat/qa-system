@@ -22,6 +22,7 @@ def eval(dataloader, model, is_cuda, auc=False):
     else:
         eps = Variable(torch.DoubleTensor([.001]))
 
+    model.eval()
     for title_batch, body_batch, title_mask, body_mask in tqdm(dataloader):
         if is_cuda:
             title_batch = torch.cat(title_batch.cuda(), 0)
@@ -75,9 +76,9 @@ def eval(dataloader, model, is_cuda, auc=False):
     return map_total / num_samples, mrr_total / num_samples, p1 / num_samples, p5 / num_samples
 
 if __name__ == '__main__':
-    model = LSTM(200, 240, 5)
+    model = LSTM(200, 240)
     model.double()
-    model.load_state_dict(torch.load('./models/lstm_1', 
+    model.load_state_dict(torch.load('./models/lstm_train10', 
         map_location=lambda storage, loc: storage))
     is_cuda = False
     is_auc = False

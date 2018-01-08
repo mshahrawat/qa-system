@@ -3,7 +3,7 @@ from torch.autograd import Variable
 import torch.nn as nn
 
 class LSTM(nn.Module):
-    def __init__(self, embedding_dim, hidden_dim, kernel_size, is_bidirectional=False, is_cuda=False):
+    def __init__(self, embedding_dim, hidden_dim, is_bidirectional=False, is_cuda=False):
         super(LSTM, self).__init__()
         self.is_bidirectional = is_bidirectional
         self.is_cuda = is_cuda

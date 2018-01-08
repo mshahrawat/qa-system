@@ -11,14 +11,14 @@ def batch_cos_sim(batch):
     for sample in samples:
         cos_sims.append(cos_sim(sample))
 
-    # cos_sims = torch.cat(cos_sims, dim=0)
     cos_sims = torch.stack(cos_sims, dim=0)
     # pos_idxs = Variable(torch.cuda.LongTensor([0] * batch_size))
     pos_idxs = Variable(torch.LongTensor([0] * batch_size))
+    print cos_sims.size()
+    print pos_idxs.size()
     return cos_sims, pos_idxs
 
 def cos_sim(inp):
-    # print "cos input", inp.size()
     s_query_candidates = F.cosine_similarity(inp[0].unsqueeze(0).expand_as(inp[1:]), inp[1:])
     return s_query_candidates
 

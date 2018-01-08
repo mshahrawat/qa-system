@@ -18,7 +18,7 @@ import itertools
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-is_cuda = True
+is_cuda = False
 num_epochs = 2
 hidden_dim = 240
 model_save_path = "./models/transfer/"
@@ -27,7 +27,7 @@ b1_dataloader_path = "data/part1/train_glove_dataloader"
 b2_dataloader_path = "data/part2/dataloader"
 aucs = []
 
-encoder = LSTM(300, hidden_dim, 5)
+encoder = LSTM(300, hidden_dim)
 encoder.double()
 domain_discriminator = DomainClassif(hidden_dim, 20)
 domain_discriminator.double()
@@ -146,7 +146,7 @@ for epoch in xrange(num_epochs):
     print 'cos sims negative:'
     print cos_sims[1:6], '\n'
 
-    prev_encoder = LSTM(300, hidden_dim, 5)
+    prev_encoder = LSTM(300, hidden_dim)
     prev_encoder.double()
     prev_encoder.load_state_dict(torch.load(model_save_path + "encoder/epoch" + str(epoch)))
     if is_cuda:

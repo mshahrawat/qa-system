@@ -14,20 +14,16 @@ is_cuda = False
 is_bidirectional = False
 EMBEDDING_DIM = 200
 HIDDEN_DIM = 240
-kernel_size = 5
 num_epochs = 2
 word2vec_vocab_size = 83916
 glove_vocab_size = 122703
-model = LSTM(EMBEDDING_DIM, HIDDEN_DIM, kernel_size, is_bidirectional, is_cuda)
+model = LSTM(EMBEDDING_DIM, HIDDEN_DIM, is_bidirectional, is_cuda)
 model.double()
 criterion = torch.nn.MultiMarginLoss()
 optimizer = optim.Adam(model.parameters(), lr = 0.001)
 if is_cuda:
     model = model.cuda()
     criterion = criterion.cuda()
-    eps = Variable(torch.cuda.DoubleTensor([.001]))
-else:
-    eps = Variable(torch.DoubleTensor([.001]))
 
 with open("data/part1/train_dataloader_1p", "rb") as f:
     dataloader = pickle.load(f)
@@ -35,6 +31,7 @@ with open("data/part1/train_dataloader_1p", "rb") as f:
 start_time = time.time()
 for epoch in xrange(num_epochs):
     total_epoch_loss = 0.
+    model.train()
     for title_batch, body_batch, title_mask, body_mask in tqdm(dataloader):
 
         if is_cuda:
@@ -71,15 +68,8 @@ for epoch in xrange(num_epochs):
             qs_encoded = (titles_encoded + bodies_encoded) / Variable(torch.DoubleTensor([2]))
         
         cos_sims, y = maxmarginloss.batch_cos_sim(qs_encoded)
-        # print "first cos"
-        # print cos_sims[0]
-        # print "second cos"
-        # print cos_sims[1]
-        # print "last cos"
-        # print cos_sims[15]
+
         loss = criterion(cos_sims, y)
-        # print "loss"
-        # print loss
         loss.backward()
         optimizer.step()
         total_epoch_loss += loss.data[0]
@@ -90,7 +80,7 @@ for epoch in xrange(num_epochs):
     # print 'cos sims negative:'
     # print cos_sims[1:4]
 
-torch.save(model.state_dict(), './models/lstm_1')
+torch.save(model.state_dict(), './models/lstm_train10')
 end_time = time.time()
-print('Finished Training in', (end_time - start_time) / 60)
+print('Finished Training in', (end_time - start_time) / 60) 
 
