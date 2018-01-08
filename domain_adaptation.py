@@ -29,7 +29,7 @@ aucs = []
 
 encoder = LSTM(300, hidden_dim)
 encoder.double()
-domain_discriminator = DomainClassif(hidden_dim, 20)
+domain_discriminator = DomainClassif(hidden_dim, 32)
 domain_discriminator.double()
 
 if is_cuda:
@@ -59,12 +59,11 @@ with open(b2_dataloader_path, "rb") as f:
 with open(dev_dataloader_path, "rb") as f:
     dev_dataloader = pickle.load(f)
 
-for i in enumerate(b1_dataloader):
-    print "i", i
-
 start_time = time.time()
 for epoch in xrange(num_epochs):
-    total_epoch_loss = 0
+    total_epoch_loss = 0.
+    encoder.train()
+    domain_discriminator.train()
     for b1, b2 in tqdm(itertools.izip(b1_dataloader, b2_dataloader)):
         b1_title, b1_body, b1_title_mask, b1_body_mask = b1
         b2_title, b2_body, b2_title_mask, b2_body_mask, b2_labels = b2
@@ -88,35 +87,13 @@ for epoch in xrange(num_epochs):
         
         # LABEL TRAINING
         labels_optimizer.zero_grad()
-        b1_title = encoder(b1_title)
-        b1_body = encoder(b1_body)
+        b1_titles_encoded = encoder(b1_title, b1_title_mask)
+        b1_bodies_encoded = encoder(b1_body, b1_body_mask)
         
         # DOMAIN TRAINING
         domain_optimizer.zero_grad()
-        b2_title = encoder(b2_title)
-        b2_body = encoder(b2_body)
-
-        # apply mask
-        # TODO: fix the mask for LSTM
-        b1_titles_encoded = b1_title * b1_title_mask.unsqueeze(2).expand_as(b1_title)
-        b1_bodies_encoded = b1_body * b1_body_mask.unsqueeze(2).expand_as(b1_body)
-
-        b2_titles_encoded = b2_title * b2_title_mask.unsqueeze(2).expand_as(b2_title)
-        b2_bodies_encoded = b2_body * b2_body_mask.unsqueeze(2).expand_as(b2_body)
-
-        # average over words 
-        b1_titles_encoded = torch.sum(b1_titles_encoded, dim=0)
-        b1_bodies_encoded = torch.sum(b1_bodies_encoded, dim=0)
-
-        b2_titles_encoded = torch.sum(b2_titles_encoded, dim=0)
-        b2_bodies_encoded = torch.sum(b2_bodies_encoded, dim=0)
-
-        # (div by actual length)
-        b1_titles_encoded = b1_titles_encoded / (torch.sum(b1_title_mask, keepdim=True, dim=0).permute(1, 0).expand_as(b1_titles_encoded) + eps)
-        b1_bodies_encoded = b1_bodies_encoded / (torch.sum(b1_body_mask, keepdim=True, dim=0).permute(1, 0).expand_as(b1_bodies_encoded) + eps)
-
-        b2_titles_encoded = b2_titles_encoded / (torch.sum(b2_title_mask, keepdim=True, dim=0).permute(1, 0).expand_as(b2_titles_encoded) + eps)
-        b2_bodies_encoded = b2_bodies_encoded / (torch.sum(b2_body_mask, keepdim=True, dim=0).permute(1, 0).expand_as(b2_bodies_encoded) + eps)
+        b2_titles_encoded = encoder(b2_title, b2_title_mask)
+        b2_bodies_encoded = encoder(b2_body, b2_body_mask)
 
         # final encoding = title and body avged
         b1_encoded = (b1_titles_encoded + b1_bodies_encoded) / two

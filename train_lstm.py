@@ -21,9 +21,11 @@ model = LSTM(EMBEDDING_DIM, HIDDEN_DIM, is_bidirectional, is_cuda)
 model.double()
 criterion = torch.nn.MultiMarginLoss()
 optimizer = optim.Adam(model.parameters(), lr = 0.001)
+two = Variable(torch.DoubleTensor([2]))
 if is_cuda:
     model = model.cuda()
     criterion = criterion.cuda()
+    two = Variable(torch.cuda.DoubleTensor([2]))
 
 with open("data/part1/train_dataloader_1p", "rb") as f:
     dataloader = pickle.load(f)
@@ -62,10 +64,7 @@ for epoch in xrange(num_epochs):
         titles_encoded = model(title_inputs, title_mask)
         bodies_encoded = model(body_inputs, body_mask)
 
-        if is_cuda:
-            qs_encoded = (titles_encoded + bodies_encoded) / Variable(torch.cuda.DoubleTensor([2]))
-        else :
-            qs_encoded = (titles_encoded + bodies_encoded) / Variable(torch.DoubleTensor([2]))
+        qs_encoded = (titles_encoded + bodies_encoded) / two
         
         cos_sims, y = maxmarginloss.batch_cos_sim(qs_encoded)
 

@@ -14,8 +14,6 @@ def batch_cos_sim(batch):
     cos_sims = torch.stack(cos_sims, dim=0)
     # pos_idxs = Variable(torch.cuda.LongTensor([0] * batch_size))
     pos_idxs = Variable(torch.LongTensor([0] * batch_size))
-    print cos_sims.size()
-    print pos_idxs.size()
     return cos_sims, pos_idxs
 
 def cos_sim(inp):
