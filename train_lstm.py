@@ -19,7 +19,7 @@ word2vec_vocab_size = 83916
 glove_vocab_size = 122703
 model = LSTM(EMBEDDING_DIM, HIDDEN_DIM, is_bidirectional, is_cuda)
 model.double()
-criterion = torch.nn.MultiMarginLoss()
+criterion = torch.nn.MultiMarginLoss(margin=1)
 optimizer = optim.Adam(model.parameters(), lr = 0.001)
 two = Variable(torch.DoubleTensor([2]))
 if is_cuda:
@@ -58,15 +58,22 @@ for epoch in xrange(num_epochs):
         body_inputs = Variable(body_inputs)
         title_mask = Variable(title_mask)
         body_mask = Variable(body_mask)
+        print title_inputs.size()
+        print title_inputs[1].size()
+        print title_mask.size()
 
         optimizer.zero_grad()
 
         titles_encoded = model(title_inputs, title_mask)
         bodies_encoded = model(body_inputs, body_mask)
+        print titles_encoded.size()
 
         qs_encoded = (titles_encoded + bodies_encoded) / two
         
         cos_sims, y = maxmarginloss.batch_cos_sim(qs_encoded)
+        print cos_sims[0]
+        print cos_sims[5]
+        print cos_sims[15]
 
         loss = criterion(cos_sims, y)
         loss.backward()
@@ -79,7 +86,7 @@ for epoch in xrange(num_epochs):
     # print 'cos sims negative:'
     # print cos_sims[1:4]
 
-torch.save(model.state_dict(), './models/lstm_train10')
+torch.save(model.state_dict(), './models/lstm_train11')
 end_time = time.time()
 print('Finished Training in', (end_time - start_time) / 60) 
 

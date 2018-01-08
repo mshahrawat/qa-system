@@ -1,6 +1,5 @@
 import torch
 import torch.nn.functional as F
-from sklearn.metrics import average_precision_score
 
 def cos_sim(q, others):
 	cos_sims = F.cosine_similarity(q.unsqueeze(0).expand_as(others), others)
@@ -9,6 +8,8 @@ def cos_sim(q, others):
 
 def mrr(q, others, labels):
 	cos_sims, sorted_indices = cos_sim(q, others)
+	print cos_sims
+	print sorted_indices
 	for i in xrange(len(sorted_indices)):
 		idx = sorted_indices[i]
 		if labels[idx] == 1:

@@ -46,9 +46,12 @@ class TrainQuestionsDataset(Dataset):
         else:
             self.train_df.columns = ["q", "p", "qi"]
         self.train_df['p'] = self.train_df['p'].apply(string_ids_to_list)
-        if not evaluate:
-            self.train_df = one_pos_sample_transform(self.train_df)
+        # if not self.evaluate:
+        self.train_df = one_pos_sample_transform(self.train_df)
         self.train_df['qi'] = self.train_df['qi'].apply(string_ids_to_list)
+        
+        # print self.train_df
+
         self.questions_df = pd.read_csv(questions_csv, sep="\t", header=None)
         self.questions_df.columns = ["qid", "title", "body"]
         self.transform = transform
@@ -72,22 +75,22 @@ class TrainQuestionsDataset(Dataset):
         qneg_mask = [x[1] for x in qneg]
         qneg = [x[0] for x in qneg]
 
-        if self.evaluate:
-            p = map(lambda x: self.id_to_text(x, is_title), p_id)
-            p = map(lambda x: self.string_to_tokens(x, is_title), p)
-            p = map(lambda x: self.tokens_to_vector(x, is_title), p)
-            p_mask = [x[1] for x in p]
-            p = [x[0] for x in p]
+        # if self.evaluate:
+        #     p = map(lambda x: self.id_to_text(x, is_title), p_id)
+        #     p = map(lambda x: self.string_to_tokens(x, is_title), p)
+        #     p = map(lambda x: self.tokens_to_vector(x, is_title), p)
+        #     p_mask = [x[1] for x in p]
+        #     p = [x[0] for x in p]
 
-            s = np.expand_dims([q] + p + qneg, axis=0)
-            s_mask = np.expand_dims([q_mask] + p_mask + qneg_mask, axis=0)
-        else:
-            p = self.id_to_text(p_id, is_title)
-            p = self.string_to_tokens(p, is_title)
-            p, p_mask = self.tokens_to_vector(p, is_title)
+        #     s = np.expand_dims([q] + p + qneg, axis=0)
+        #     s_mask = np.expand_dims([q_mask] + p_mask + qneg_mask, axis=0)
+        # else:
+        p = self.id_to_text(p_id, is_title)
+        p = self.string_to_tokens(p, is_title)
+        p, p_mask = self.tokens_to_vector(p, is_title)
 
-            s = np.expand_dims([q, p] + qneg, axis=0)
-            s_mask = np.expand_dims([q_mask, p_mask] + qneg_mask, axis=0)
+        s = np.expand_dims([q, p] + qneg, axis=0)
+        s_mask = np.expand_dims([q_mask, p_mask] + qneg_mask, axis=0)
         
         sample = np.concatenate(s, axis=1)
         sample_mask = np.concatenate(s_mask, axis=1)
@@ -99,8 +102,8 @@ class TrainQuestionsDataset(Dataset):
         q_id = int(q_df['q'])
         p_id = list(q_df['p'])[0]
         qneg_ids = list(q_df['qi'])[0]
-        if not self.evaluate:
-            qneg_ids = np.random.choice(qneg_ids, 20)
+        # if not self.evaluate:
+        qneg_ids = np.random.choice(qneg_ids, 20)
         # take ids found and map to title + body of question word2vec feature vectors
         sample_titles, title_mask = self.get_sample(q_id, qneg_ids, p_id, True)
         sample_bodies, bodies_mask = self.get_sample(q_id, qneg_ids, p_id, False)
@@ -153,16 +156,17 @@ class TrainQuestionsDataset(Dataset):
         return feature_vector, mask
 
 if __name__ == "__main__":
-    train_file = './data/part1/raw/train_random.txt'
+    # train_file = './data/part1/raw/train_random.txt'
+    train_file = './data/part1/raw/dev.txt'
     questions_file = './data/part1/raw/text_tokenized.txt'
-    dataloader_name = "data/part1/train_glove_dataloader"
-    # dataloader_name = "data/part1/train_dataloader"
-    batch_size = 64
-    is_eval = False
-    if is_eval:
-        batch_size = 1
-    glove_path = './data/part2/glove_dict'
-    # glove_path = None
+    # dataloader_name = "data/part1/train_glove_dataloader"
+    dataloader_name = "data/part1/dev_dataloader_t"
+    batch_size = 16
+    is_eval = True
+    # if is_eval:
+    #     batch_size = 1
+    # glove_path = './data/part2/glove_dict'
+    glove_path = None
 
     questions_dataset = TrainQuestionsDataset(train_csv=train_file, 
         questions_csv=questions_file, evaluate=is_eval, glove=glove_path)
