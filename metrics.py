@@ -8,8 +8,6 @@ def cos_sim(q, others):
 
 def mrr(q, others, labels):
 	cos_sims, sorted_indices = cos_sim(q, others)
-	print cos_sims
-	print sorted_indices
 	for i in xrange(len(sorted_indices)):
 		idx = sorted_indices[i]
 		if labels[idx] == 1:
@@ -42,8 +40,3 @@ def map(q, others, labels, total_pos):
 		if num_pos == total_pos:
 			break
 	return prec_sum / float(num_pos)
-
-q = torch.rand(667)
-others = torch.rand(21, 667)
-labels = torch.zeros(21)
-cos, ranks = cos_sim(q, others)

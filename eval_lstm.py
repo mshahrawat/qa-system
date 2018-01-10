@@ -46,57 +46,33 @@ def eval(dataloader, model, is_cuda, auc=False):
         title_mask = title_mask.permute(1, 0)
         body_mask = body_mask.permute(1, 0)
 
-        # print title_inputs.size()
-        # print body_inputs.size()
-
         title_inputs = Variable(title_inputs)
         body_inputs = Variable(body_inputs)
         title_mask = Variable(title_mask)
         body_mask = Variable(body_mask)
-        # print title_mask.size()
-        # print body_mask.size()
 
         titles_encoded = model(title_inputs, title_mask)
         bodies_encoded = model(body_inputs, body_mask)
-        # print titles_encoded.size()
-        # print bodies_encoded.size()
 
         qs_encoded = (titles_encoded + bodies_encoded) / two
 
-        # print qs_encoded.size()
-
         cos_sims = maxmarginloss.cos_sim(qs_encoded)
-        print "cos sim size"
-        print cos_sims.size()
-        # print "cos sim"
-        # print cos_sims
         labels = torch.zeros(cos_sims.size()[0]).long()
-        # print "labels size"
-        # print labels.size()
-        # print "labels"
-        # print labels
         if labels.size()[0] > 20:
             labels[:labels.size()[0] - 20] = 1
-        # print "labels again"
-        # print labels
             
         loss += criterion(cos_sims, Variable(labels)).data[0]
 
         if auc:
-            others = cos_sims[1:].data
+            others = cos_sims.permute(1, 0)[1:].data
             labels = torch.zeros(others.size()[0])
-            labels[0] = 1
+            if labels.size()[0] > 20:
+                labels[:labels.size()[0] - 20] = 1
             m.add(others, labels)
         else:
             q = qs_encoded[0].data
-            print "q"
-            print q
             others = qs_encoded[1:].data
-            print "others"
-            print others
             labels = torch.zeros(others.size()[0])
-            print "labels"
-            print labels
             if labels.size()[0] > 20:
                 labels[:labels.size()[0] - 20] = 1
             mrr_total += metrics.mrr(q, others, labels)
@@ -104,10 +80,6 @@ def eval(dataloader, model, is_cuda, auc=False):
             p1 += metrics.p_at_n(1, q, others, labels)
             p5 += metrics.p_at_n(5, q, others, labels)
         num_samples += 1
-        break
-        if num_samples > 500:
-            break
-        # break
 
     if auc:
         return m.value(max_fpr=.05)
@@ -122,7 +94,7 @@ if __name__ == '__main__':
     is_cuda = False
     is_auc = False
 
-    with open("data/part1/dev_dataloader_t", "rb") as f:
+    with open("data/part1/test_dataloader", "rb") as f:
         dataloader = pickle.load(f)
 
     if is_auc:
