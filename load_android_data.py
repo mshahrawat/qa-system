@@ -5,7 +5,6 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 import re
 import pickle
-import pdb
 
 class AndroidQuestionsDataset(Dataset):
     def __init__(self, ubuntu_csv, android_csv, glove_path):
@@ -13,9 +12,11 @@ class AndroidQuestionsDataset(Dataset):
 
         self.ubuntu_df = pd.read_csv(ubuntu_csv, sep="\t", header=None)
         self.ubuntu_df.columns = ["qid", "title", "body"]
+        self.ubuntu_df = self.ubuntu_df.iloc[0:201]
 
         self.android_df = pd.read_csv(android_csv, sep="\t", header=None)
         self.android_df.columns = ["qid", "title", "body"]
+        self.android_df = self.android_df.iloc[0:201]
 
     def make_glove_dict(self, glove_path):
         with open(glove_path, "rb") as f:
@@ -35,11 +36,13 @@ class AndroidQuestionsDataset(Dataset):
         return samples, samples_mask
 
     def __getitem__(self, idx):
-        ubuntu_title_samples = self.ubuntu_df['title'].sample(n=20)
-        android_title_samples = self.android_df['title'].sample(n=20)
+        ubuntu_samples = self.ubuntu_df.sample(n=20)
+        ubuntu_title_samples = ubuntu_samples['title']
+        ubuntu_body_samples = ubuntu_samples['body']
 
-        ubuntu_body_samples = self.ubuntu_df['body'].sample(n=20)
-        android_body_samples = self.android_df['body'].sample(n=20)
+        android_samples = self.android_df.sample(n=20)
+        android_title_samples = android_samples['title']
+        android_body_samples = android_samples['body']
 
         ubuntu_title_samples, ubuntu_title_mask = self.transform_samples(ubuntu_title_samples, True)
         android_title_samples, android_title_mask = self.transform_samples(android_title_samples, True)
@@ -94,7 +97,7 @@ if __name__ == "__main__":
     ubuntu_file = './data/part1/raw/text_tokenized.txt'
     android_file = './data/part2/corpus.txt'
     model_path = './data/part2/glove_dict'
-    batch_size = 64
+    batch_size = 32
 
     questions_dataset = AndroidQuestionsDataset(ubuntu_csv=ubuntu_file, 
         android_csv=android_file, glove_path=model_path)
