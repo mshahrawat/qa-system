@@ -9,7 +9,7 @@ Part 1: Question Retrieval
 - load_data.py to create batches for Ubuntu dataset, prune_glove.py for creating glove dictionary, and word2vec.py for train_lstm
 - metrics.py to calculate MAP, MRR, P@1, P@5 in eval_lstm
 
-Part 2:
+Part 2: Transfer Learning
 - tfidf_baseline.py for tfidf baseline score calculation
 - domain_adaptation.py for domain adaptation training
 - domain_classifier.py defines feed forward network for domain classification in domain_adaptation
