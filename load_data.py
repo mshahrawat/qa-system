@@ -7,7 +7,6 @@ import re
 import gensim
 import pickle
 from random import shuffle
-import pdb
 
 model = gensim.models.Word2Vec.load('./word2vec/train_word2vec')
 
@@ -50,8 +49,6 @@ class TrainQuestionsDataset(Dataset):
             self.train_df = one_pos_sample_transform(self.train_df)
         self.train_df['qi'] = self.train_df['qi'].apply(string_ids_to_list)
         
-        # print self.train_df
-
         self.questions_df = pd.read_csv(questions_csv, sep="\t", header=None)
         self.questions_df.columns = ["qid", "title", "body"]
         self.transform = transform
@@ -156,30 +153,25 @@ class TrainQuestionsDataset(Dataset):
         return feature_vector, mask
 
 if __name__ == "__main__":
-    # train_file = './data/part1/raw/train_random.txt'
-    train_file = './data/part1/raw/dev.txt'
+    train_file = './data/part1/raw/train_random.txt'
+    # train_file = './data/part1/raw/dev.txt'
     questions_file = './data/part1/raw/text_tokenized.txt'
-    # dataloader_name = "data/part1/train_glove_dataloader"
-    dataloader_name = "data/part1/dev_dataloader_hi"
-    batch_size = 16
-    is_eval = True
+    dataloader_name = "data/part1/train_glove_dataloader"
+    # dataloader_name = "data/part1/dev_dataloader"
+    batch_size = 32
+    is_eval = False
     if is_eval:
         batch_size = 1
-    # glove_path = './data/part2/glove_dict'
-    glove_path = None
+    glove_path = './data/part2/glove_dict'
+    # glove_path = None
 
     questions_dataset = TrainQuestionsDataset(train_csv=train_file, 
         questions_csv=questions_file, evaluate=is_eval, glove=glove_path)
-    # questions_dataset = TrainQuestionsDataset(train_csv=train_file, 
-    #     questions_csv=questions_file, evaluate=is_eval)
 
     dataloader = DataLoader(questions_dataset, batch_size=batch_size, shuffle=True)
 
     with open(dataloader_name, "wb") as f:
         pickle.dump(dataloader, f)
-
-    # with open("data/dataloader", "rb") as f:
-    #     dataloader = pickle.load(f)
 
 
 

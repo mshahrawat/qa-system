@@ -5,7 +5,6 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 import re
 import pickle
-import pdb
 
 def string_ids_to_list(ids):
     ids = ids.split()
@@ -117,11 +116,11 @@ class AndroidEvalDataset(Dataset):
         return feature_vector, mask
 
 if __name__ == "__main__":
-    pos_file = './data/part2/dev.pos.txt'
-    neg_file = './data/part2/dev.neg.txt'
+    pos_file = './data/part2/test.pos.txt'
+    neg_file = './data/part2/test.neg.txt'
     questions_file = './data/part2/corpus.txt'
     glove_model_path = './data/part2/glove_dict'
-    dataloader_path = './data/part2/dev_dataloader'
+    dataloader_path = './data/part2/test_dataloader'
 
     questions_dataset = AndroidEvalDataset(positives_csv=pos_file, negatives_csv=neg_file,
         question_csv=questions_file, glove_path=glove_model_path)

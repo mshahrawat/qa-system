@@ -12,22 +12,26 @@ from tqdm import tqdm
 
 is_cuda = False
 is_bidirectional = False
-EMBEDDING_DIM = 200
+EMBEDDING_DIM = 300 # 300 if transfer, 200 o.w.
 HIDDEN_DIM = 240
-num_epochs = 2
+num_epochs = 5
 word2vec_vocab_size = 83916
 glove_vocab_size = 122703
 model = LSTM(EMBEDDING_DIM, HIDDEN_DIM, is_bidirectional, is_cuda)
 model.double()
 criterion = torch.nn.MultiMarginLoss(margin=1)
 optimizer = optim.Adam(model.parameters(), lr = 0.001)
+# print model parameters
+# model_parameters = filter(lambda p: p.requires_grad, model.parameters())
+# params = sum([np.prod(p.size()) for p in model_parameters])
+# print params
 two = Variable(torch.DoubleTensor([2]))
 if is_cuda:
     model = model.cuda()
     criterion = criterion.cuda()
     two = Variable(torch.cuda.DoubleTensor([2]))
 
-with open("data/part1/train_dataloader_1p", "rb") as f:
+with open("data/part1/train_glove_dataloader", "rb") as f:
     dataloader = pickle.load(f)
 
 start_time = time.time()
@@ -51,8 +55,6 @@ for epoch in xrange(num_epochs):
         body_inputs = body_batch.permute(2, 0, 1)
         title_mask = title_mask.permute(1, 0)
         body_mask = body_mask.permute(1, 0)
-        # titles = (100 seq, 22 * batch_size, 200 hid_dim)
-        # mask = (100 seq, 200 hid_dim)
 
         title_inputs = Variable(title_inputs)
         body_inputs = Variable(body_inputs)
@@ -66,10 +68,7 @@ for epoch in xrange(num_epochs):
 
         qs_encoded = (titles_encoded + bodies_encoded) / two
         
-        cos_sims, y = maxmarginloss.batch_cos_sim(qs_encoded)
-        # print cos_sims[0]
-        # print cos_sims[5]
-        # print cos_sims[15]
+        cos_sims, y = maxmarginloss.batch_cos_sim(qs_encoded, is_cuda)
 
         loss = criterion(cos_sims, y)
         loss.backward()
@@ -78,7 +77,7 @@ for epoch in xrange(num_epochs):
 
     print epoch, " total training loss per epoch: ", total_epoch_loss
 
-torch.save(model.state_dict(), './models/lstm_train_h')
+torch.save(model.state_dict(), './models/lstm_direct_5ep')
 end_time = time.time()
-print('Finished Training in', (end_time - start_time) / 60) 
+print('Finished Training in', (end_time - start_time) / 60)
 

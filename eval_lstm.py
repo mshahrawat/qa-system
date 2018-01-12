@@ -87,14 +87,19 @@ def eval(dataloader, model, is_cuda, auc=False):
     return map_total / num_samples, mrr_total / num_samples, p1 / num_samples, p5 / num_samples
 
 if __name__ == '__main__':
-    model = LSTM(200, 240)
+    is_transfer = True
+    if is_transfer:
+        emb_dim = 300 # glove
+    else:
+        emb_dim = 200 # word2vec
+    model = LSTM(emb_dim, 240)
     model.double()
-    model.load_state_dict(torch.load('./models/lstm_train10', 
+    model.load_state_dict(torch.load('./models/lstm_direct_5ep', 
         map_location=lambda storage, loc: storage))
     is_cuda = False
     is_auc = False
 
-    with open("data/part1/test_dataloader", "rb") as f:
+    with open("data/part2/dev_dataloader", "rb") as f:
         dataloader = pickle.load(f)
 
     if is_auc:

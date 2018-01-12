@@ -12,11 +12,9 @@ class AndroidQuestionsDataset(Dataset):
 
         self.ubuntu_df = pd.read_csv(ubuntu_csv, sep="\t", header=None)
         self.ubuntu_df.columns = ["qid", "title", "body"]
-        self.ubuntu_df = self.ubuntu_df.iloc[0:201]
 
         self.android_df = pd.read_csv(android_csv, sep="\t", header=None)
         self.android_df.columns = ["qid", "title", "body"]
-        self.android_df = self.android_df.iloc[0:201]
 
     def make_glove_dict(self, glove_path):
         with open(glove_path, "rb") as f:

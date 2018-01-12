@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 # 1. Input to Hidden Layer : Linear(input dim, hidden dim)
-# 2. Tanh activation
+# 2. Tanh activation, ReLU
 # 3. Hidden to Output Layer : Linear(hidden dim, 2)
 # 4. LogSoftmax on top of the output layer
 

@@ -18,9 +18,9 @@ class LSTM(nn.Module):
     def init_hidden(self, batch_size):
         if self.is_bidirectional:
             if self.is_cuda:
-                h = Variable(torch.zeros(1, batch_size, self.hidden_dim//2)).double().cuda()
+                h = Variable(torch.zeros(2, batch_size, self.hidden_dim//2)).double().cuda()
             else:
-                h = Variable(torch.zeros(1, batch_size, self.hidden_dim//2)).double()
+                h = Variable(torch.zeros(2, batch_size, self.hidden_dim//2)).double()
             return (h, h)
         else:
             if self.is_cuda:
@@ -41,8 +41,6 @@ class LSTM(nn.Module):
         # output = (100 seq, 22 * batch_size, 240 hid_dim)
 
         # mean pooling
-        # output = torch.mean(output, dim=0) (without mask)
-        # average over the word and divide by the actual length
         output = torch.sum(output, dim=0)
         # output = (22 * batch_size, 240 hid_dim)
 

@@ -12,24 +12,24 @@ import eval_lstm
 
 import pickle
 import itertools
-import pdb
 import time
 import itertools
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 is_cuda = False
-num_epochs = 2
+num_epochs = 5
 hidden_dim = 240
 model_save_path = "./models/transfer/"
-dev_dataloader_path = "data/part2/dev_dataloader"
-b1_dataloader_path = "data/part1/train_glove_dataloader"
+# dev_dataloader_path = "data/part2/dev_dataloader"
+test_dataloader_path = "data/part2/test_dataloader"
+b1_dataloader_path = "data/part1/train_glove_dataloader_10p"
 b2_dataloader_path = "data/part2/dataloader"
 aucs = []
 
-encoder = LSTM(300, hidden_dim)
+encoder = LSTM(300, hidden_dim, is_cuda=is_cuda)
 encoder.double()
-domain_discriminator = DomainClassif(hidden_dim, 32)
+domain_discriminator = DomainClassif(hidden_dim, 128)
 domain_discriminator.double()
 
 if is_cuda:
@@ -56,7 +56,7 @@ with open(b1_dataloader_path, "rb") as f:
 with open(b2_dataloader_path, "rb") as f:
     b2_dataloader = pickle.load(f)
 # android dev
-with open(dev_dataloader_path, "rb") as f:
+with open(test_dataloader_path, "rb") as f:
     dev_dataloader = pickle.load(f)
 
 start_time = time.time()
@@ -99,7 +99,7 @@ for epoch in xrange(num_epochs):
         b1_encoded = (b1_titles_encoded + b1_bodies_encoded) / two
         b2_encoded = (b2_titles_encoded + b2_bodies_encoded) / two
         
-        cos_sims, y = maxmarginloss.batch_cos_sim(b1_encoded)
+        cos_sims, y = maxmarginloss.batch_cos_sim(b1_encoded, is_cuda)
         domain_preds = domain_discriminator(b2_encoded)
 
         b1_loss = labels_criterion(cos_sims, y)
@@ -111,17 +111,11 @@ for epoch in xrange(num_epochs):
         labels_optimizer.step()
         domain_optimizer.step()
         total_epoch_loss += total_loss.data[0]
-        # break
 
-    # TODO: see what actually should save
     torch.save(encoder.state_dict(), model_save_path + "encoder/epoch" + str(epoch))
     torch.save(domain_discriminator.state_dict(), model_save_path + "discrim/epoch" + str(epoch))
 
     print epoch, " total training loss per epoch: ", total_epoch_loss
-    print "cos sim pos:"
-    print cos_sims[0]
-    print 'cos sims negative:'
-    print cos_sims[1:6], '\n'
 
     prev_encoder = LSTM(300, hidden_dim)
     prev_encoder.double()
